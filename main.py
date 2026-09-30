@@ -43,5 +43,10 @@ with dpg.window(tag="input_area", no_title_bar=True, width=WIDTH, height=35, pos
 dpg.setup_dearpygui()
 dpg.show_viewport()
 # To be replaced with event loop that grabs incoming messages
-dpg.start_dearpygui()
+while dpg.is_dearpygui_running():
+    while not net.incoming.qsize() == 0:
+        message = net.incoming.get_nowait()
+        dpg.add_text(f"{net.addr[0]}: {message}", parent="chat_logs")
+
+    dpg.render_dearpygui_frame()
 dpg.destroy_context()

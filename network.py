@@ -1,5 +1,6 @@
 import socket
 import threading
+import queue
 
 class NetworkManager():
     def __init__(self, status_callback=None):
@@ -7,6 +8,7 @@ class NetworkManager():
         self.status_callback = status_callback if status_callback is not None else print
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.conn, self.addr = None, None
+        self.incoming = queue.Queue()
         # This needs to initialize all the class variables needed to supply a
         # easy-to-use network manager without hanging
 
@@ -14,10 +16,13 @@ class NetworkManager():
         self.status_callback(message)
 
     def send_message(self, message: str):
-        self.socket.sendall(message.encode())
+        if self.conn is None:
+            raise ConnectionError("Not connected to a peer")
+        self.conn.sendall((message + "\n").encode("utf-8"))
 
     def connect(self, target_ip: str):
         self._status(f"Trying to connect to {target_ip}:{self.port}")
+        
         try:
             self._client(target_ip)
             self._status(f"Connected to {target_ip}:{self.port}")
@@ -27,7 +32,12 @@ class NetworkManager():
             
 
     def disconnect(self):
-        self.socket.close()
+        connection = self.conn
+        self.conn = None
+        if connection is not None:
+            connection.close()
+        if self.socket is not connection:
+            self.socket.close()
         self._status("Disconnected from network.")
 
     def _host(self):
@@ -46,6 +56,15 @@ class NetworkManager():
         try:
             self.socket.settimeout(5.0)
             self.socket.connect((target_ip, self.port))
+            self.socket.settimeout(None)
+            self.conn = self.socket
+            self.addr = (target_ip, self.port)
+            listener = threading.Thread(
+                target=self.__receive_worker,
+                args=(self.conn, self.addr),
+                daemon=True,
+            )
+            listener.start()
             return
         except Exception:
             raise
@@ -53,17 +72,26 @@ class NetworkManager():
 
     def __listen_worker(self):
         while True:
-            self.conn, self.addr = self.socket.accept()
             try:
-                data = self.conn.recv(1024)
+                connection, address = self.socket.accept()
+            except OSError:
+                return
+
+            self.conn, self.addr = connection, address
+            self.__receive_worker(connection, address)
+
+    def __receive_worker(self, connection, address):
+        while True:
+            try:
+                data = connection.recv(4096)
 
                 if not data:
-                    self._status(f"{self.addr[0]} disconnected.")
-                    self.disconnect()
                     break
 
-                self._status(f"{self.addr[0]}: {data.decode()}")
+                self.incoming.put_nowait(data.decode())
             except Exception:
                 break
 
-        self._status(f"Client: {self.addr[0]} disconnected.")
+        if self.conn is connection:
+            self.conn = None
+        self._status(f"Client: {address[0]} disconnected.")
