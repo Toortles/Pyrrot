@@ -17,10 +17,9 @@ def present_message(sender, app_data, user_data):
     else:
         if msg.startswith('/'):
             commander.process(msg)
-            dpg.set_value("input_t", "")
-            return
-        
-        dpg.add_text("You: " + msg, parent="chat_logs")
+        else:
+            commander.process(msg)
+            dpg.add_text("You: " + msg, parent="chat_logs")
     
     dpg.set_value("input_t", "")
     

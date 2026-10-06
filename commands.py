@@ -11,25 +11,31 @@ class CommandParser:
         }
 
     def process(self, user_input: str):
-        user_input = user_input.strip()
+        print("Passed in text: " + user_input)
         if not user_input:
             return
+        formatted = user_input.strip()
+        print("After format")
 
-        if user_input.startswith('/'):
-            parts = user_input.split(' ', 1)
+        if formatted.startswith('/'):
+            print("Command detected")
+            parts = formatted.split(' ', 1)
             command = parts[0].lower()
             args = parts[1] if len(parts) > 1 else ""
 
+            print("Post split")
             command_function = self.commands.get(command)
             if command_function:
                 return command_function(args)
-            else:
-                return "Not a command"
-
-        return user_input
+                
+        
+        print("Regular message")
+        self._handle_message(user_input)
 
     def _handle_message(self, text: str):
+        print(f"Sending message: \"{text}\"")
         self.net_manager.send_message(text)
+        pass
 
     def _cmd_connect(self, args: str):
         self.net_manager.connect(args)
