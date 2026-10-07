@@ -17,7 +17,8 @@ class NetworkManager():
 
     def send_message(self, message: str):
         if self.conn is None:
-            raise ConnectionError("Not connected to a peer")
+            self._status("No connection established. Cannot send message until connected to peer.")
+            return
         self.conn.sendall((message + "\n").encode("utf-8"))
 
     def connect(self, target_ip: str):
@@ -27,7 +28,7 @@ class NetworkManager():
             self._client(target_ip)
             self._status(f"Connected to {target_ip}:{self.port}")
         except Exception as e:
-            self._status(f"Couldn't connect to host: {e}.\nFalling back to host...")
+            self._status(f"Couldn't connect to host: {e}. Falling back to host...")
             self._host()
             
 
@@ -38,7 +39,7 @@ class NetworkManager():
             connection.close()
         if self.socket is not connection:
             self.socket.close()
-        self._status("Disconnected from network.")
+        self._status("Closed network connection")
 
     def _host(self):
         self.socket.close()
@@ -95,3 +96,8 @@ class NetworkManager():
         if self.conn is connection:
             self.conn = None
         self._status(f"Client: {address[0]} disconnected.")
+
+    def __del__(self):
+        self.disconnect()
+        self.socket.close()
+        self.conn.close()
