@@ -12,10 +12,15 @@ class ChatController(QObject):
         self.messageToDisplay.connect(self._appendMessage)
 
         network = NetworkManager(status_callback=self._show_status)
+        network.messageReceived.connect(self._show_incoming)
         self.parser = CommandParser(network, status_callback=self._show_status)
 
     def _show_status(self, text):
         self.messageToDisplay.emit(text, "system")
+
+    @Slot(str)
+    def _show_incoming(self, text):
+        self.messageToDisplay.emit(text, "incoming")
 
     @Slot(str, str)
     def _appendMessage(self, text, kind):

@@ -30,7 +30,7 @@ class CommandParser:
         return self._handle_message(user_input)
 
     def _handle_message(self, text: str) -> bool:
-        self.net_manager.send_message(text)
+        return self.net_manager.send_message(text)
         
 
     def _cmd_connect(self, args: str):
@@ -43,8 +43,7 @@ class CommandParser:
 
     def _cmd_status(self, args: str):
         # This will get current connection status
-        self.net_manager._status(f'''Connection status: {'Connected' if self.net_manager.conn else 'Disconnected'} 
-                       Peer: {self.net_manager.addr[0] if self.net_manager.addr else 'N/A'}''')
+        self.net_manager._status(f"Connection status: {'Connected' if self.net_manager.conn else 'Disconnected'}\nPeer: {self.net_manager.addr[0] if self.net_manager.addr else 'N/A'}")
 
     def _cmd_help(self, args: str):
         help_text = "Available commands:\n"

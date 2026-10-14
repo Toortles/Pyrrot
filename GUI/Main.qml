@@ -65,6 +65,8 @@ Window {
                         // Text inside bubble
                         TextEdit {
                             id: label
+                            color: row.kind === "system" ? "black": "white"
+                            font.pointSize: row.kind === "system" ? 8 : 14
                             x: bubble.pad
                             y: bubble.pad
                             width: bubble.width - 2 * bubble.pad
