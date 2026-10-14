@@ -17,9 +17,11 @@ class NetworkManager():
 
     def send_message(self, message: str):
         if self.conn is None:
-            self._status("No connection established. Cannot send message until connected to peer.")
-            return
+            self._status("No connection established. Connect first with: \'/connect\'")
+            return False
+        
         self.conn.sendall((message + "\n").encode("utf-8"))
+        return True
 
     def connect(self, target_ip: str):
         self._status(f"Trying to connect to {target_ip}:{self.port}")

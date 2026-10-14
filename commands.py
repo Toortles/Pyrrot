@@ -11,7 +11,7 @@ class CommandParser:
             "/help": self._cmd_help
         }
 
-    def process(self, user_input: str):
+    def process(self, user_input: str) -> bool:
         if not user_input:
             return
         formatted = user_input.strip()
@@ -23,17 +23,18 @@ class CommandParser:
 
             command_function = self.commands.get(command)
             if command_function:
-                return command_function(args)
+                command_function(args)
+                return False
                 
         
-        self._handle_message(user_input)
+        return self._handle_message(user_input)
 
-    def _handle_message(self, text: str):
+    def _handle_message(self, text: str) -> bool:
         self.net_manager.send_message(text)
         
 
     def _cmd_connect(self, args: str):
-        self.net_manager.connect(args)
+        return self.net_manager.connect(args)
         
 
     def _cmd_disconnect(self, args: str):
